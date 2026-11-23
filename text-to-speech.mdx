@@ -104,8 +104,11 @@ Speech models stumble on symbols and digits, so PlotWeaver rewrites them into wo
 | `25kg` | twenty-five kilograms |
 | `3:15pm` | three fifteen p.m. |
 | `10%` | ten percent |
+| `0803 123 4567` | zero eight zero three, one two three, four five six seven |
+| `+234 803 123 4567` | plus two three four, eight zero three, one two three, four five six seven |
+| `0123456789` (an account number) | zero one two, three four five, six seven eight nine |
 
-Phone numbers and account numbers are read as one large number, so put a space between every digit (`0 8 0 3 1 2 3...`) and each one is read on its own. In languages other than these five, write numbers, amounts and dates as words yourself.
+Phone numbers, account numbers and any other run of seven or more digits are read digit by digit, in groups with a short pause between them, the way people read them out. Amounts stay amounts: `₦3400000` is still three million four hundred thousand naira. In languages other than these five, write numbers, amounts and dates as words yourself.
 
 Whatever `normalize` is set to, a word of four or more capital letters is read as an ordinary word (`STORM` is said as "Storm") so every voice says it cleanly. Shorter acronyms such as `ASR` or `TTS` are kept as letters.
 
