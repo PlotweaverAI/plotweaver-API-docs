@@ -1,59 +1,53 @@
-<p align="center">
-  <img src="images/hero-dark.png" alt="PlotWeaver: voices for Africa's languages" width="100%">
-</p>
-
 # PlotWeaver Docs
 
-The documentation for the **PlotWeaver developer API** and the **PlotWeaver MCP**: text to speech, voice cloning, speech to text and translation for Yoruba, Hausa, Igbo, Nigerian Pidgin, Nigerian English and more than 80 African languages.
+The documentation for PlotWeaver at **[docs.plotweaver.app](https://docs.plotweaver.app)**: the developer API, the PlotWeaver MCP for AI agents, and the API reference with a live playground.
 
-**Read it at [plotweaver.mintlify.app](https://plotweaver.mintlify.app).**
+Built with [Fumadocs](https://fumadocs.dev) on Next.js. Deploys on Vercel with no settings to change.
 
-| | |
+## Run it locally
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:3000. Pages reload as you edit them.
+
+## Where things are
+
+| Path | What it holds |
 |---|---|
-| Developer API | `https://api.plotweaver.app/v1` |
-| MCP server | `https://mcp.plotweaver.app/mcp` |
-| Dashboard and API keys | [app.plotweaver.app](https://app.plotweaver.app) |
-| Pricing | [plotweaver.app/pricing](https://plotweaver.app/pricing) |
-| Support | [info@plotweaver.app](mailto:info@plotweaver.app) |
+| `content/docs/(guides)/` | The Guides tab: getting started, text to speech, speech to text, translation, Build guides and account pages |
+| `content/docs/mcp/` | The AI agents (MCP) tab |
+| `content/docs/api-reference/` | The API reference tab. Endpoint pages are made from `public/openapi.json` |
+| `meta.json` in each folder | Sidebar order and section names (`---Section---`) |
+| `public/openapi.json` | The OpenAPI spec, also served at `/openapi.json` |
+| `public/images`, `public/logo` | Pictures and logos |
+| `components/compat.tsx` | Card, Steps, ParamField, Note, Tip, Frame and the other page components |
+| `app/global.css` | Brand colours and fonts |
 
-## Start here
+## Writing a page
 
-- [Quickstart](https://plotweaver.mintlify.app/quickstart): your first Yoruba audio in under two minutes
-- [Connect your AI assistant](https://plotweaver.mintlify.app/mcp/overview): Claude, ChatGPT, Claude Code, Cursor and VS Code
-- [API reference](https://plotweaver.mintlify.app/api-reference/introduction): every endpoint, with a live playground
-- [Languages](https://plotweaver.mintlify.app/languages) and [voices](https://plotweaver.mintlify.app/voices)
+1. Add an `.mdx` file in the right folder with a `title` and `description` at the top.
+2. Add its name to that folder's `meta.json` where it should sit in the sidebar.
+3. Link to other pages by their path, for example `[Voices](/voices)`.
 
-## What's in this repository
+Code blocks with `tab="curl"`, `tab="Python"` and so on next to each other become one tabbed block. A `title="file.json"` shows a file name above the block. Diagrams go in a `mermaid` block.
 
-```
-docs.json                  site settings and navigation
-index.mdx, *.mdx           guides
-build/                     end-to-end recipes (phone agent, subtitles, announcements, narration)
-mcp/                       the PlotWeaver MCP: connecting each app, tools, files, security
-api-reference/             the API reference (openapi.json) and the real-time WebSocket protocol
-images/, logo/             artwork
-```
+## Updating the API reference
 
-The site is built with [Mintlify](https://mintlify.com) and deploys automatically when `main` changes.
+Replace `public/openapi.json` with the new spec from the developer API. The endpoint pages and the playground update on the next build.
 
-## Preview locally
+## Deploying on Vercel
 
-```bash
-npm i -g mint
-mint dev
-```
+1. In Vercel, **Add New > Project**, import `PlotweaverAI/plotweaver-API-docs`. Vercel detects Next.js; keep the defaults.
+2. Deploy.
+3. **Settings > Domains**, add `docs.plotweaver.app`, and add the DNS record Vercel shows.
 
-Open http://localhost:3000. Before pushing, check the build and links:
+Every push to `master` deploys again.
 
-```bash
-mint validate
-mint broken-links
-```
+## Also served
 
-## Writing guidelines
-
-See [AGENTS.md](AGENTS.md). In short: plain, direct sentences; real, working examples; Yoruba always with full tone marks and underdots; no em dashes.
-
----
-
-© PlotWeaver Limited, Company No. 16189457, London, United Kingdom.
+- `/llms.txt` and `/llms-full.txt` for AI tools
+- Any page as Markdown, by adding `.md` to its address (for example `/quickstart.md`)
+- Search, with `Ctrl K`

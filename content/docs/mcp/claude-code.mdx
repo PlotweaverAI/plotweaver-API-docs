@@ -1,0 +1,73 @@
+---
+title: "Connect Claude Code"
+sidebarTitle: "Claude Code"
+description: "Add PlotWeaver to Claude Code with one command."
+---
+
+<Tabs items={["Sign in with PlotWeaver", "API key", "Share with your team"]}>
+  <Tab value="Sign in with PlotWeaver">
+    ```bash
+    claude mcp add --transport http --scope user plotweaver https://mcp.plotweaver.app/mcp
+    ```
+
+    Then, inside Claude Code, run:
+
+    ```text
+    /mcp
+    ```
+
+    Choose **plotweaver**, then **Authenticate**. Your browser opens the PlotWeaver sign-in page: sign in and press **Approve**.
+
+    <Note>
+    Desktop tools sign in through a page on your own computer, so the PlotWeaver page labels the request as coming from an unverified app at `localhost`. That is expected when you started the sign-in yourself from Claude Code.
+    </Note>
+  </Tab>
+  <Tab value="API key">
+    Keep the key in your environment, then:
+
+    ```bash
+    export PLOTWEAVER_API_KEY="pw_prod_..."
+    claude mcp add --transport http --scope user plotweaver https://mcp.plotweaver.app/mcp \
+      --header "X-API-Key: $PLOTWEAVER_API_KEY"
+    ```
+  </Tab>
+  <Tab value="Share with your team">
+    Commit a `.mcp.json` at the root of your project. Each teammate sets `PLOTWEAVER_API_KEY` in their own environment, so no key is ever committed:
+
+    ```json title=".mcp.json"
+    {
+      "mcpServers": {
+        "plotweaver": {
+          "type": "http",
+          "url": "https://mcp.plotweaver.app/mcp",
+          "headers": {
+            "X-API-Key": "${PLOTWEAVER_API_KEY}"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+`--scope user` makes PlotWeaver available in all your projects. Leave it out to add it to the current project only.
+
+Check the connection with `claude mcp list`.
+
+## Why Claude Code and PlotWeaver work so well together
+
+Claude Code has a shell, so it can send files to PlotWeaver directly and finish the job with `ffmpeg`:
+
+> Add a Yoruba voiceover to `promo.mp4`. Write one line per scene, voice each with Adérónkẹ́, and lay them on the video at the scene starts.
+
+> Subtitle every `.mp4` in `./interviews` in English and put the `.srt` files beside them.
+
+> Transcribe `standup.m4a` and write the action items to `notes.md`.
+
+Claude Code uses `upload_file` to send each file from your project and runs the `curl` command it gets back, so nothing goes through the chat. See [Files and audio](/mcp/files-and-audio).
+
+## Remove it
+
+```bash
+claude mcp remove plotweaver
+```

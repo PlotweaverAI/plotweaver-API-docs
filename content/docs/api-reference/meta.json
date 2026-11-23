@@ -1,0 +1,12 @@
+{
+  "title": "API reference",
+  "icon": "Code",
+  "root": true,
+  "pages": [
+    "---Overview---",
+    "introduction",
+    "realtime-transcription",
+    "---Endpoints---",
+    "..."
+  ]
+}

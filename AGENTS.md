@@ -1,40 +1,23 @@
-# Writing PlotWeaver docs
+# Working on the PlotWeaver docs
 
-Instructions for anyone, human or AI, editing this documentation.
+This repository is the PlotWeaver documentation site (Fumadocs on Next.js, deployed on Vercel at docs.plotweaver.app).
 
-## Sources of truth
+## Commands
 
-- **Endpoints, fields and limits** come from the developer API itself. `api-reference/openapi.json` is generated from it; regenerate it rather than editing by hand when the API changes.
-- **Languages and default voices** come from `GET https://api.plotweaver.app/v1/languages`. Update `languages.mdx` from it.
-- **MCP tools** come from the MCP server's tool definitions. `mcp/tools.mdx` mirrors them.
-- Never document a feature, limit or price you have not confirmed. Prices live on [plotweaver.app/pricing](https://plotweaver.app/pricing); link there rather than repeating figures that change.
+- `npm install`, then `npm run dev` to preview at http://localhost:3000
+- `npm run build` must pass before you push: it checks every page, link target and type
 
-## Style
+## Content rules
 
-- Plain, direct sentences. Say what to do, then why, in as few words as it takes.
-- Use the second person ("you") and present tense.
-- **No em dashes or en dashes.** Use a comma, a colon, a full stop or brackets.
-- Every code example must run as written once `PLOTWEAVER_API_KEY` is set. No placeholders other than the key and ids the reader must supply.
-- Show `curl` first, then Python, then Node.js.
-- Product names: **PlotWeaver**, **STORM v1.5**, **STORM Gust 1.0**, **STORM Ensemble 3.0**, **STORM v3**, **STORM ASR 2.0**, **STORM MT**. Model ids in code style: `storm-v1`, `storm-gust`, `storm-ensemble`, `storm-v3`.
-- Never name third-party models or infrastructure behind PlotWeaver.
-- Do not describe plans or features that are not live yet.
+- Pages are MDX in `content/docs/`. Every page needs `title` and `description` front matter. `sidebarTitle` gives a shorter sidebar name.
+- Sidebar order lives in each folder's `meta.json`. A new page that is not listed there will not appear in the sidebar.
+- Use the components in `components/compat.tsx` (`Card`, `CardGroup`, `Steps`, `Step`, `Tabs`, `Tab`, `Note`, `Tip`, `Warning`, `Info`, `ParamField`, `ResponseField`, `Accordion`, `AccordionGroup`, `Frame`). `Tabs` needs `items` that match each `Tab value`.
+- Code tabs: fences next to each other with `tab="Name"`.
+- Write Yoruba with full tone marks and underdots.
+- No em dashes. Plain, direct English.
+- Never describe what PlotWeaver's models are built on or trained from.
 
-## Languages in examples
+## API reference
 
-- Yoruba is always written with full tone marks and underdots: `Ẹ kú àárọ̀`, `Adérónkẹ́`, never `E ku aaro`.
-- Write Yoruba as it is spoken, joining syllables that are said together.
-- Use real, natural sentences a Nigerian business would actually send: deliveries, appointments, banking, announcements.
-
-## Components
-
-Use Mintlify components where they help the reader: `<Steps>` for setup, `<CodeGroup>` for the same call in several languages, `<Tabs>` for alternative setups, `<AccordionGroup>` for troubleshooting, `<ParamField>` for request fields. Inside MDX, write `{` and `}` in plain text as `\{` and `\}`.
-
-## Before you push
-
-```bash
-mint validate
-mint broken-links
-```
-
-Then read the changed pages in `mint dev` on a phone-sized window as well as a desktop one.
+- Endpoint pages come from `public/openapi.json`. Do not write endpoint pages by hand; update the spec.
+- Endpoint URLs are `/api-reference/<tag>/<summary>`, lower case with hyphens.

@@ -1,0 +1,22 @@
+{
+  "title": "AI agents (MCP)",
+  "icon": "Sparkles",
+  "root": true,
+  "pages": [
+    "---PlotWeaver MCP---",
+    "overview",
+    "---Connect---",
+    "claude",
+    "chatgpt",
+    "claude-code",
+    "cursor",
+    "vscode",
+    "other-clients",
+    "---Use it---",
+    "prompts",
+    "tools",
+    "files-and-audio",
+    "sign-in-and-security",
+    "troubleshooting"
+  ]
+}

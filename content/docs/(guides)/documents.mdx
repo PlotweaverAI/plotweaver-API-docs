@@ -1,0 +1,50 @@
+---
+title: "Documents"
+description: "Pull the readable text out of a web page, PDF or Word file, ready to speak or translate. Free."
+---
+
+`POST /v1/documents/text` gets the readable text of a web page, PDF, Word (`.docx`) or text file. Web pages give their main article text, without menus or adverts. Nothing is billed: you pay only when the text is spoken or translated.
+
+Send **either** a `url` form field **or** a `file` (multipart, up to 15 MB):
+
+
+```bash tab="From a link"
+curl -X POST https://api.plotweaver.app/v1/documents/text \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -F url=https://example.com/news/story
+```
+
+```bash tab="From a file"
+curl -X POST https://api.plotweaver.app/v1/documents/text \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -F file=@annual-report.pdf
+```
+
+
+```json
+{
+  "title": "Lagos gets a new library",
+  "text": "The state opened a new public library on Monday...",
+  "characters": 1840,
+  "words": 312,
+  "source": "url",
+  "pages": null,
+  "truncated": false,
+  "warning": null
+}
+```
+
+| Field | Notes |
+|---|---|
+| `source` | `url`, `pdf`, `docx` or `text` |
+| `pages` | PDFs only |
+| `truncated` | `true` when the document was longer than 100,000 characters. The text stops at a sentence end |
+| `warning` | Set when a PDF looks partly scanned. Pictures of pages have no text, so some text may be missing |
+
+Errors are `422` with a plain explanation: a scanned PDF with no text, a password-protected file, a page that needs a sign-in, or a link to a private address.
+
+Every uploaded file is checked before it is opened, and links to private or internal addresses are refused.
+
+## From document to audio
+
+Speech takes up to 5,000 characters per request, so split long text at paragraph ends and send the parts in order. [Voiceover from a document](/build/voiceover-from-a-document) has the complete script.

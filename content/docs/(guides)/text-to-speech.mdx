@@ -1,0 +1,129 @@
+---
+title: "Text to speech"
+description: "Turn text into natural speech in 86 languages with one request."
+---
+
+`POST /v1/speech` takes text and returns a WAV file.
+
+
+```bash tab="curl"
+curl -X POST https://api.plotweaver.app/v1/speech \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Sannu da zuwa. Za a fara taron da ƙarfe goma.", "language": "ha", "voice_id": "maryam"}' \
+  --output welcome-ha.wav
+```
+
+```python tab="Python"
+import os
+import requests
+
+r = requests.post(
+    "https://api.plotweaver.app/v1/speech",
+    headers={"X-API-Key": os.environ["PLOTWEAVER_API_KEY"]},
+    json={
+        "text": "Sannu da zuwa. Za a fara taron da ƙarfe goma.",
+        "language": "ha",
+        "voice_id": "maryam",
+    },
+    timeout=120,
+)
+r.raise_for_status()
+open("welcome-ha.wav", "wb").write(r.content)
+```
+
+```javascript tab="Node.js"
+const res = await fetch("https://api.plotweaver.app/v1/speech", {
+  method: "POST",
+  headers: { "X-API-Key": process.env.PLOTWEAVER_API_KEY, "Content-Type": "application/json" },
+  body: JSON.stringify({
+    text: "Sannu da zuwa. Za a fara taron da ƙarfe goma.",
+    language: "ha",
+    voice_id: "maryam",
+  }),
+});
+const audio = Buffer.from(await res.arrayBuffer());
+```
+
+
+## Request
+
+<ParamField body="text" type="string" required>
+  Up to 5,000 characters after normalisation. Long text is split at sentence ends, rendered piece by piece and joined into one file with natural pauses.
+</ParamField>
+
+<ParamField body="language" type="string" required>
+  A language code (`yo`) or name (`Yoruba`). See [Languages](/languages).
+</ParamField>
+
+<ParamField body="voice_id" type="string">
+  A built-in voice id or name, or one of your cloned voice ids. Leave it out for the language's default voice. See [Voices](/voices).
+</ParamField>
+
+<ParamField body="mode" type="string" default="quality">
+  `quality` or `speed`, for the Nigerian languages. `speed` serves the same built-in voice on STORM Gust for the lowest latency, with a little less expression. Cloned voices always use STORM Gust.
+</ParamField>
+
+<ParamField body="model" type="string">
+  Pin an engine: `storm-v1`, `storm-gust` or `storm-v3`. You rarely need this; see [how a request finds its model](/languages#how-a-request-finds-its-model).
+</ParamField>
+
+<ParamField body="normalize" type="boolean" default="true">
+  Rewrite currencies, numbers, units, times and symbols into words before speaking. See below.
+</ParamField>
+
+<ParamField body="fast" type="boolean" default="false">
+  Skip the engine's quality retries for lower latency.
+</ParamField>
+
+## Response
+
+`200` with `audio/wav` bytes. The headers tell you what happened:
+
+| Header | Meaning |
+|---|---|
+| `X-Request-ID` | Quote this when you contact support |
+| `X-Model` | The engine that answered |
+| `X-Voice` | The voice used |
+| `X-Language` | The language code |
+| `X-Characters` | Billable characters, after normalisation |
+| `X-Cross-Lingual` | `true` when the voice spoke a language other than its native one |
+
+Generation takes from a few seconds to about 20 seconds depending on length. Give your HTTP client a timeout of at least 120 seconds. For audio that starts playing at once, use [streaming speech](/streaming-speech).
+
+## Text normalisation
+
+Speech models stumble on symbols and digits, so PlotWeaver rewrites them into words first. This is on by default for `yo`, `ha`, `ig`, `pcm` and `en`.
+
+| You send | Spoken as |
+|---|---|
+| `₦5.75 million` | five point seven five million naira |
+| `09:30` | nine thirty |
+| `25kg` | twenty-five kilograms |
+| `3:15pm` | three fifteen p.m. |
+| `10%` | ten percent |
+
+Phone numbers and account numbers are read as one large number, so put a space between every digit (`0 8 0 3 1 2 3...`) and each one is read on its own. In languages other than these five, write numbers, amounts and dates as words yourself.
+
+Whatever `normalize` is set to, a word of four or more capital letters is read as an ordinary word (`STORM` is said as "Storm") so every voice says it cleanly. Shorter acronyms such as `ASR` or `TTS` are kept as letters.
+
+## Writing text that sounds great
+
+<AccordionGroup>
+  <Accordion title="Write Yoruba with full tone marks">
+    Yoruba is a tonal language: the marks change the word. `Ọkọ` can mean husband, hoe, vehicle or spear depending on its tones. Send `Ẹ kú àárọ̀`, not `E ku aaro`, and the voice will say what you mean.
+  </Accordion>
+  <Accordion title="Punctuate for rhythm">
+    Commas and full stops become pauses. Break long sentences where a speaker would breathe.
+  </Accordion>
+  <Accordion title="Mixing languages">
+    Text that switches languages mid-sentence is read in one voice. Set `language` to the main language of the text.
+  </Accordion>
+  <Accordion title="Long content">
+    Up to 5,000 characters per request. For a book chapter or a long article, split at paragraph ends, send the parts in order, and join the files. [Voiceover from a document](/build/voiceover-from-a-document) shows the full flow.
+  </Accordion>
+</AccordionGroup>
+
+## One-off cloning
+
+`POST /v1/speech/clone` speaks text in the voice of an uploaded clip for a single request, without saving the voice. See [Voice cloning](/voice-cloning#one-off-cloning).
