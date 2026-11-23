@@ -1,0 +1,48 @@
+---
+title: "Troubleshooting"
+description: "Fixes for the problems people hit most when connecting the PlotWeaver MCP."
+---
+
+<AccordionGroup>
+  <Accordion title="The assistant doesn't use PlotWeaver">
+    Check that the connector is switched on for this chat (in Claude: **+ > Connectors**). Then mention it by name: "Use PlotWeaver to read this in Hausa."
+  </Accordion>
+
+  <Accordion title="The sign-in page says 'Unverified app'">
+    That is expected for desktop tools such as Claude Code, Cursor and VS Code, which sign in through your own computer. Approve it only if you started the sign-in yourself just now. Claude and ChatGPT are always named.
+  </Accordion>
+
+  <Accordion title="401 or 'invalid key'">
+    The key is wrong, deleted or rotated. In header-based setups, check the header name is exactly `X-API-Key` and that your environment variable is visible to the app (open it from a terminal to be sure). With sign-in, remove the connector and add it again.
+  </Accordion>
+
+  <Accordion title="402: billing or payment">
+    Your account needs an active plan or credit, or a payment failed. Open **Billing** in the [dashboard](https://app.plotweaver.app).
+  </Accordion>
+
+  <Accordion title="429: too many requests">
+    Your plan's requests per minute, or this month's allowance, is used up, or a voice engine is momentarily full. The assistant will be told when to retry. See [Limits](/limits).
+  </Accordion>
+
+  <Accordion title="Cursor shows no tools">
+    Cursor may not see environment variables from your shell profile when opened from a launcher. Open it from a terminal with `cursor .`, or put the key directly in `~/.cursor/mcp.json`. Check **Cursor Settings > MCP** for a green dot, and the MCP logs for errors.
+  </Accordion>
+
+  <Accordion title="The assistant can't send my file">
+    Some assistants' networks block uploads. Ask for a recording link instead ("give me a PlotWeaver upload page") and upload the file yourself, or share a Google Drive or Dropbox link.
+  </Accordion>
+
+  <Accordion title="A download link has expired">
+    Links last 24 hours. Ask "give me a fresh link to that audio": `get_audio` makes a new one for anything made in the last 7 days.
+  </Accordion>
+
+  <Accordion title="A Yoruba word sounds wrong">
+    Give the text with full tone marks, for example `Ẹ káàbọ̀`, not `E kaabo`. If it is still wrong, send the text, language and voice to [info@plotweaver.app](mailto:info@plotweaver.app).
+  </Accordion>
+
+  <Accordion title="Translation into French, Swahili or another language is refused">
+    Translation covers English, Yoruba, Hausa, Igbo and Nigerian Pidgin. Speech covers 86 languages, so you can still voice text you have written in Swahili, Twi, Zulu and the rest.
+  </Accordion>
+</AccordionGroup>
+
+Still stuck? Write to [info@plotweaver.app](mailto:info@plotweaver.app) with the app you use, the time, and what you asked.

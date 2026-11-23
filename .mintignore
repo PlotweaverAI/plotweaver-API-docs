@@ -1,0 +1,7 @@
+# Not pages
+AGENTS.md
+README.md
+
+# Drafts
+drafts/
+*.draft.mdx

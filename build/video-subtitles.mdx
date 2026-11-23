@@ -1,0 +1,77 @@
+---
+title: "Subtitle a video"
+description: "Subtitles for a Nigerian-language video in its own language, and translated into another."
+---
+
+This recipe takes a video in Yoruba, Hausa, Igbo, Pidgin or Nigerian English (or a mix) and produces an `.srt` file in the spoken language, plus a translated `.srt` that keeps the same timing.
+
+## 1. Take out the sound
+
+Uploading only the audio is faster and keeps long videos under the 25 MB limit:
+
+```bash
+ffmpeg -i interview.mp4 -vn -ac 1 -ar 16000 -c:a libopus -b:a 32k interview.ogg
+```
+
+## 2. Subtitles in the spoken language
+
+```bash
+curl -X POST https://api.plotweaver.app/v1/transcriptions \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -F file=@interview.ogg -F response_format=srt \
+  -o interview.ha.srt
+```
+
+Segments follow natural pauses and run up to 15 seconds, so each one fits on screen.
+
+## 3. Translated subtitles
+
+Ask for timed JSON instead, translate each segment, and write the file yourself. Every line keeps its original timing.
+
+```python
+import os
+import requests
+
+API = "https://api.plotweaver.app/v1"
+HEADERS = {"X-API-Key": os.environ["PLOTWEAVER_API_KEY"]}
+
+
+def stamp(t: float) -> str:
+    ms = round(t * 1000)
+    h, ms = divmod(ms, 3_600_000)
+    m, ms = divmod(ms, 60_000)
+    s, ms = divmod(ms, 1000)
+    return f"{h:02}:{m:02}:{s:02},{ms:03}"
+
+
+with open("interview.ogg", "rb") as f:
+    result = requests.post(
+        f"{API}/transcriptions",
+        headers=HEADERS,
+        files={"file": f},
+        data={"timestamps": "segment"},
+        timeout=600,
+    ).json()
+
+blocks = []
+for i, seg in enumerate(result["segments"], start=1):
+    english = requests.post(
+        f"{API}/translations",
+        headers=HEADERS,
+        json={"text": seg["text"], "source_language": "ha", "target_language": "en"},
+        timeout=60,
+    ).json()["translated_text"]
+    blocks.append(f"{i}\n{stamp(seg['start'])} --> {stamp(seg['end'])}\n{english}\n")
+
+open("interview.en.srt", "w", encoding="utf-8").write("\n".join(blocks))
+```
+
+## 4. Burn them in (optional)
+
+```bash
+ffmpeg -i interview.mp4 -vf "subtitles=interview.en.srt" -c:a copy interview-subtitled.mp4
+```
+
+<Tip>
+Using an AI assistant? With the [PlotWeaver MCP](/mcp/overview) connected, just say "Subtitle this Hausa interview in English" and attach the video.
+</Tip>

@@ -1,0 +1,30 @@
+---
+title: "API reference"
+description: "Every public endpoint, with an interactive playground. Bring your API key."
+---
+
+| | |
+|---|---|
+| **Base URL** | `https://api.plotweaver.app` |
+| **Authentication** | `X-API-Key: pw_prod_...` on every request except `GET /v1/languages` |
+| **Request bodies** | JSON, or `multipart/form-data` for file uploads |
+| **Responses** | JSON, `audio/wav` for speech, raw PCM for streaming speech |
+| **OpenAPI** | [`openapi.json`](https://github.com/PlotweaverAI/plotweaver-API-docs/blob/main/api-reference/openapi.json) |
+
+Pick an endpoint from the menu to see its parameters and responses, and try it live with your key in the playground.
+
+## Endpoints
+
+| Area | Endpoints |
+|---|---|
+| Languages | `GET /v1/languages`, `GET /v1/languages/{code}` |
+| Voices | `GET /v1/voices`, `POST /v1/voices`, `GET /v1/voices/consent`, `GET`, `PATCH`, `DELETE /v1/voices/{voice_id}`, `GET /v1/voices/{voice_id}/audio` |
+| Text to speech | `POST /v1/speech`, `POST /v1/speech/stream`, `POST /v1/speech/clone` |
+| Speech to text | `POST /v1/transcriptions`, [`WSS /v1/transcriptions/stream`](/api-reference/realtime-transcription) |
+| Translation | `POST /v1/translations` |
+| Documents | `POST /v1/documents/text` |
+| Usage | `GET /v1/usage/summary` |
+
+## For AI coding assistants
+
+This whole site is available as plain text for language models at [`/llms.txt`](/llms.txt) and [`/llms-full.txt`](/llms-full.txt), and the API serves its own guide as Markdown at `https://api.plotweaver.app/v1/docs.md`. Point your coding assistant at either and it will write correct PlotWeaver code first time.

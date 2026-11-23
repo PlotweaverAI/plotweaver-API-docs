@@ -1,0 +1,67 @@
+---
+title: "Real-time transcription (WebSocket)"
+sidebarTitle: "WSS /v1/transcriptions/stream"
+description: "The message protocol for streaming speech to text."
+---
+
+```
+wss://api.plotweaver.app/v1/transcriptions/stream
+```
+
+**Authentication:** `X-API-Key` header, or `api_key` query parameter for clients that cannot set headers.
+
+## Query parameters
+
+<ParamField query="sample_rate" type="integer" default="16000">
+  Sample rate of the audio you send, 8000 to 48000.
+</ParamField>
+
+<ParamField query="encoding" type="string" default="pcm_s16le">
+  `pcm_s16le` (signed 16-bit little-endian, mono) or `mulaw` (8-bit phone audio).
+</ParamField>
+
+<ParamField query="endpoint_ms" type="integer" default="700">
+  The pause, in milliseconds (200 to 5000), that ends a sentence.
+</ParamField>
+
+<ParamField query="language" type="string">
+  Optional: `yo`, `ha`, `ig`, `pcm` or `en`. Recorded with the request; the model does not need it.
+</ParamField>
+
+## Client messages
+
+<ResponseField name="binary frame" type="bytes">
+  Raw mono audio in the chosen encoding. Send 20 to 100 ms per frame, as it is captured.
+</ResponseField>
+
+<ResponseField name='{"event": "end"}' type="text">
+  Optional. Finish the current sentence now instead of waiting for the pause.
+</ResponseField>
+
+## Server messages
+
+<ResponseField name="speech_started" type="object">
+  `{"event": "speech_started", "utterance_id": 1, "start_s": 3.42}`: the speaker started talking.
+</ResponseField>
+
+<ResponseField name="partial" type="object">
+  `{"event": "partial", "text": "...", "utterance_id": 1}`: the sentence so far, about every 0.4 s.
+</ResponseField>
+
+<ResponseField name="final" type="object">
+  `{"event": "final", "text": "...", "utterance_id": 1, "start_s": 3.42, "end_s": 6.10}`: the finished sentence.
+</ResponseField>
+
+<ResponseField name="heartbeat" type="object">
+  `{"event": "heartbeat"}`: the connection is alive.
+</ResponseField>
+
+<ResponseField name="error" type="object">
+  `{"event": "error", "status": 429, "detail": "...", "retry_after_s": 5}`: the request was refused. The socket then closes with code 4000 plus `status`.
+</ResponseField>
+
+## Limits
+
+30 minutes of audio per connection, closed after 30 seconds without a message from you, 8 connections per account. Billed per second of audio sent.
+
+See the [real-time transcription guide](/realtime-transcription) for full examples.

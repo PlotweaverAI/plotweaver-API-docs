@@ -1,0 +1,57 @@
+---
+title: "Multilingual announcements"
+description: "Write one message in English and publish it spoken in Yoruba, Hausa, Igbo, Pidgin and English."
+---
+
+Banks, clinics, campaigns and public services often need the same message in every major Nigerian language. This recipe translates once per language and voices each version with a native speaker.
+
+```python
+import os
+import requests
+
+API = "https://api.plotweaver.app/v1"
+HEADERS = {"X-API-Key": os.environ["PLOTWEAVER_API_KEY"]}
+
+MESSAGE = "Our branches will open at ten on Monday because of the public holiday."
+
+# A native-speaker voice for each language
+VOICES = {"en": "joseph", "yo": "aderonke", "ha": "maryam", "ig": "chinwe", "pcm": "ufuoma"}
+
+for lang, voice in VOICES.items():
+    text = MESSAGE
+    if lang != "en":
+        text = requests.post(
+            f"{API}/translations",
+            headers=HEADERS,
+            json={"text": MESSAGE, "source_language": "en", "target_language": lang},
+            timeout=60,
+        ).json()["translated_text"]
+
+    audio = requests.post(
+        f"{API}/speech",
+        headers=HEADERS,
+        json={"text": text, "language": lang, "voice_id": voice},
+        timeout=120,
+    )
+    audio.raise_for_status()
+    open(f"announcement-{lang}.wav", "wb").write(audio.content)
+    print(lang, text)
+```
+
+## One voice across every language
+
+Prefer one recognisable brand voice? Every built-in Nigerian voice speaks all five languages, so you can use the same `voice_id` everywhere. A voice sounds most natural in its own language, so listen to each version before publishing.
+
+## Before you publish
+
+- **Have a native speaker read each translation.** Machine translation is a strong first draft for public messages, not the final word.
+- **Check names and numbers.** Write amounts and times the way you want them said; see [text normalisation](/text-to-speech#text-normalisation).
+- **Keep the WAV files** for radio and phone systems, or convert them for social media:
+
+```bash
+ffmpeg -i announcement-yo.wav -c:a libmp3lame -b:a 128k announcement-yo.mp3
+```
+
+<Tip>
+In an AI assistant with the [PlotWeaver MCP](/mcp/overview), one sentence does all of this: "Announce 'We are open on Saturday' in Yoruba, Hausa, Igbo, Pidgin and English."
+</Tip>

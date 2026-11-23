@@ -1,0 +1,2342 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "PlotWeaver Developer API",
+    "version": "1.0.0",
+    "description": "Text to speech, speech to text, translation and voice cloning for Nigerian and African languages."
+  },
+  "servers": [
+    {
+      "url": "https://api.plotweaver.app",
+      "description": "Production"
+    }
+  ],
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ],
+  "paths": {
+    "/v1/languages": {
+      "get": {
+        "tags": [
+          "Languages"
+        ],
+        "summary": "Supported languages",
+        "description": "Every language the platform serves, with the services and TTS engines\navailable for it. Nigerian core languages first, then alphabetical.",
+        "operationId": "list_languages_v1_languages_get",
+        "parameters": [
+          {
+            "name": "service",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/Service"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Only languages that support this service: tts, tts_clone, asr, translation",
+              "title": "Service"
+            },
+            "description": "Only languages that support this service: tts, tts_clone, asr, translation"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LanguageModel"
+                  },
+                  "title": "Response List Languages V1 Languages Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/languages/{code}": {
+      "get": {
+        "tags": [
+          "Languages"
+        ],
+        "summary": "One language",
+        "operationId": "get_language_v1_languages__code__get",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LanguageModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voices": {
+      "get": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "List voices",
+        "description": "Built-in voices (curated, with a `sample_url` you can play before\nsynthesising) plus the caller's own cloned voices. With `language`, every\nvoice that can speak it: native speakers first, then cross-lingual voices\n(`cross_lingual: true`), recommended ones before the rest.",
+        "operationId": "list_voices_v1_voices_get",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Voices that can speak this language: native speakers first, then cross-lingual voices",
+              "title": "Language"
+            },
+            "description": "Voices that can speak this language: native speakers first, then cross-lingual voices"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "pattern": "^(builtin|cloned)$"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VoiceModel"
+                  },
+                  "title": "Response List Voices V1 Voices Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Create a cloned voice",
+        "description": "Store a reference clip and get a `voice_id` to use in `POST /v1/speech` and\n`POST /v1/speech/stream`. Nigerian-language voices are cloned by\n**storm-gust**: the clip is checked first (it must hold at least 3 s of clear\nspeech, and STORM ASR 2.0 must be able to hear words in it). All other\nlanguages are cloned by **storm-v3**, which also needs `reference_text`.\nThe clip is transcribed by STORM ASR 2.0, which detects the language itself, so\ncode-mixed speech is fine. Only clone a voice with the speaker's permission. Optionally,\nto record that permission, have the speaker read the sentence from\n`GET /v1/voices/consent` as the clip and send its `consent_prompt_id`: the voice is\nmarked `consent_verified` when the recording says it. Reading it is not required.",
+        "operationId": "create_voice_v1_voices_post",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_create_voice_v1_voices_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClonedVoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voices/consent": {
+      "get": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Get a consent sentence to read",
+        "description": "The sentence a speaker reads aloud to give consent to cloning their voice, and the\n`prompt_id` to send with the recording to `POST /v1/voices`. Valid for 30 minutes.",
+        "operationId": "consent_prompt_v1_voices_consent_get",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "language",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "yo, ha, ig, pcm or en: the language the speaker will read",
+              "title": "Language"
+            },
+            "description": "yo, ha, ig, pcm or en: the language the speaker will read"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsentPromptModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voices/{voice_id}": {
+      "get": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Get a voice",
+        "operationId": "get_voice_v1_voices__voice_id__get",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "voice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Voice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Rename a cloned voice",
+        "operationId": "update_voice_v1_voices__voice_id__patch",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "voice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Voice Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVoiceData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClonedVoiceModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Delete a cloned voice",
+        "operationId": "delete_voice_v1_voices__voice_id__delete",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "voice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Voice Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/voices/{voice_id}/audio": {
+      "get": {
+        "tags": [
+          "Voices"
+        ],
+        "summary": "Play a cloned voice's reference clip",
+        "description": "A short-lived link to the clip you uploaded for this voice.",
+        "operationId": "cloned_voice_audio_v1_voices__voice_id__audio_get",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "voice_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Voice Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VoiceAudioModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/speech": {
+      "post": {
+        "tags": [
+          "Text to Speech"
+        ],
+        "summary": "Text to speech",
+        "description": "Synthesize speech and return a WAV file.\n\nEngine routing: Nigerian languages (`yo`, `ha`, `ig`, `pcm`, `en`) use\n**storm-v1** with a built-in voice by default; a cloned `voice_id` uses the\nengine it was created with; every other language uses **storm-v3**. Pass\n`model` to pin an engine.",
+        "operationId": "text_to_speech_v1_speech_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeechRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "WAV audio. Headers: X-Request-ID, X-Model, X-Voice, X-Language, X-Characters, X-Cross-Lingual.",
+            "content": {
+              "audio/wav": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/speech/stream": {
+      "post": {
+        "tags": [
+          "Text to Speech"
+        ],
+        "summary": "Streaming text to speech (built-in and cloned voices)",
+        "description": "Stream audio as it is generated, for low time-to-first-sound, in the five\nNigerian languages. Streaming runs on **storm-gust** by default, built-in\nand cloned voices alike; send `\"mode\": \"quality\"` (or pin `model`) to stream\na built-in voice on **storm-v1**. A take cannot be retried once audio has\nstarted, so use `POST /v1/speech` when reliability matters more than latency.",
+        "operationId": "text_to_speech_stream_v1_speech_stream_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SpeechRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Raw PCM, signed 16-bit little-endian, mono, 24 kHz. Headers: X-Audio-Format, X-Sample-Rate, X-Channels.",
+            "content": {
+              "application/json": {
+                "schema": {}
+              },
+              "application/octet-stream": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/speech/clone": {
+      "post": {
+        "tags": [
+          "Text to Speech"
+        ],
+        "summary": "Text to speech with a one-off reference clip",
+        "description": "Clone a voice from an uploaded clip for this one request, without saving it.\nTo reuse a voice, create it once with `POST /v1/voices` and pass its id to\n`POST /v1/speech` instead.",
+        "operationId": "text_to_speech_with_reference_v1_speech_clone_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_text_to_speech_with_reference_v1_speech_clone_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "WAV audio. Headers: X-Request-ID, X-Model, X-Voice, X-Language, X-Characters, X-Cross-Lingual.",
+            "content": {
+              "audio/wav": {}
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/transcriptions": {
+      "post": {
+        "tags": [
+          "Speech to Text"
+        ],
+        "summary": "Transcribe audio",
+        "description": "Speech to text with **STORM ASR 2.0** (Yoruba, Hausa, Igbo, Nigerian Pidgin, Nigerian English and\ncode-mixed speech; no language needed). Audio longer than 15 s is split at pauses\nand the pieces are transcribed separately, so long files come back complete\nand there is no length limit beyond the upload cap.\n\nFor subtitles, captions or editing, ask for `timestamps=segment` (or a\nsubtitle file with `response_format=srt|vtt`): the audio is split at pauses\nwith voice activity detection, each piece is transcribed, and each comes\nback with its start and end in seconds. Video files work too. Billed on the\naudio's length either way.",
+        "operationId": "transcribe_v1_transcriptions_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_transcribe_v1_transcriptions_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranscriptionModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/translations": {
+      "post": {
+        "tags": [
+          "Translation"
+        ],
+        "summary": "Translate text",
+        "description": "Translate between any two of `en`, `yo`, `ha`, `ig`, `pcm` with **storm-mt**.\nA pair with no English side (e.g. `yo` -> `ig`) is pivoted through English by\nthe engine; the response then carries `pivoted: true` and the intermediate\nEnglish text.",
+        "operationId": "translate_v1_translations_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TranslationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TranslationModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/documents/text": {
+      "post": {
+        "tags": [
+          "Documents"
+        ],
+        "summary": "Get the text of a web page or document",
+        "description": "Pull the readable text out of a web page, PDF, Word or text file, ready to\nsend to `POST /v1/speech`. Web pages give their main article text, without\nmenus or adverts. Send either `file` or `url`.\n\nNothing is billed: you pay only when the text is spoken. Up to 100,000\ncharacters are returned (`truncated` says when a document was longer).\nScanned PDFs (pictures of pages) have no text layer; `warning` says when a\nPDF looks partly scanned. Speech takes up to 5,000 characters per request,\nso split longer text at paragraph ends.",
+        "operationId": "document_text_v1_documents_text_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_document_text_v1_documents_text_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentTextModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ]
+      }
+    },
+    "/v1/usage/summary": {
+      "get": {
+        "tags": [
+          "Usage"
+        ],
+        "summary": "Your usage",
+        "description": "Requests, characters, audio seconds, cost and languages for your account, broken down by service, model, language and day.",
+        "operationId": "my_usage_v1_usage_summary_get",
+        "security": [
+          {
+            "ApiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "start",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "First day (UTC), default 30 days ago",
+              "title": "Start"
+            },
+            "description": "First day (UTC), default 30 days ago"
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Last day (UTC), default today",
+              "title": "End"
+            },
+            "description": "Last day (UTC), default today"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UsageSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "Your API key from the PlotWeaver dashboard (API Keys)."
+      }
+    },
+    "schemas": {
+      "Body_create_voice_v1_voices_post": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Name"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language",
+            "description": "Language the clip is spoken in"
+          },
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "5-10 s clean recording of one person speaking (wav/mp3/flac/m4a)"
+          },
+          "reference_text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Text",
+            "description": "Transcript of the clip. Required for non-Nigerian languages (storm-v3)."
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "consent_prompt_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consent Prompt Id",
+            "description": "Optional, from GET /v1/voices/consent. If the clip is the speaker reading that sentence, the voice is marked consent_verified; any other clip is still cloned, unverified."
+          },
+          "rights_confirmed": {
+            "type": "boolean",
+            "title": "Rights Confirmed",
+            "description": "True confirms this is your own voice or you have the speaker's permission to clone it (Voice Cloning Policy). The app always sends it; it is stored on the voice.",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "language",
+          "file"
+        ],
+        "title": "Body_create_voice_v1_voices_post"
+      },
+      "Body_document_text_v1_documents_text_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File",
+            "description": "A PDF, Word (.docx) or text file, up to 15 MB."
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 2048
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url",
+            "description": "A web page (article, blog post, news story) or a link to a PDF."
+          }
+        },
+        "type": "object",
+        "title": "Body_document_text_v1_documents_text_post"
+      },
+      "Body_text_to_speech_with_reference_v1_speech_clone_post": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "reference_audio": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "Reference Audio",
+            "description": "4-8 s clip of the voice to clone (wav/mp3)"
+          },
+          "reference_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Text",
+            "description": "Transcript of the clip. Required for storm-v3 (non-Nigerian languages)."
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TTSModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fast": {
+            "type": "boolean",
+            "title": "Fast",
+            "default": false
+          },
+          "normalize": {
+            "type": "boolean",
+            "title": "Normalize",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "language",
+          "reference_audio"
+        ],
+        "title": "Body_text_to_speech_with_reference_v1_speech_clone_post"
+      },
+      "Body_transcribe_v1_transcriptions_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "description": "Audio file (wav, mp3, m4a, ogg, flac...)"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language",
+            "description": "Optional: `en`, `yo`, `ha`, `ig` or `pcm`. STORM ASR 2.0 recognises all five (and Yoruba-English code-mixing) without it."
+          },
+          "timestamps": {
+            "type": "string",
+            "enum": [
+              "none",
+              "segment"
+            ],
+            "title": "Timestamps",
+            "description": "`segment` adds `segments`: the transcript in timed pieces (start, end, text), cut at pauses.",
+            "default": "none"
+          },
+          "response_format": {
+            "type": "string",
+            "enum": [
+              "json",
+              "srt",
+              "vtt"
+            ],
+            "title": "Response Format",
+            "description": "`srt` or `vtt` returns a subtitle file instead of JSON (implies timestamps=segment).",
+            "default": "json"
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_transcribe_v1_transcriptions_post"
+      },
+      "Bucket": {
+        "properties": {
+          "key": {
+            "type": "string",
+            "title": "Key"
+          },
+          "label": {
+            "type": "string",
+            "title": "Label"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "units": {
+            "type": "number",
+            "title": "Units"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "units_by_unit": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Units By Unit",
+            "default": {}
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key",
+          "label",
+          "requests",
+          "units",
+          "unit",
+          "cost"
+        ],
+        "title": "Bucket",
+        "description": "One row of a breakdown: a product, service, model or language."
+      },
+      "ClientRow": {
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "User Id"
+          },
+          "email": {
+            "type": "string",
+            "title": "Email"
+          },
+          "organisation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Organisation"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "characters": {
+            "type": "number",
+            "title": "Characters"
+          },
+          "audio_seconds": {
+            "type": "number",
+            "title": "Audio Seconds"
+          },
+          "voices": {
+            "type": "number",
+            "title": "Voices"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          },
+          "active_languages": {
+            "type": "integer",
+            "title": "Active Languages"
+          },
+          "last_request_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Request At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "user_id",
+          "email",
+          "organisation",
+          "requests",
+          "characters",
+          "audio_seconds",
+          "voices",
+          "cost",
+          "active_languages",
+          "last_request_at"
+        ],
+        "title": "ClientRow"
+      },
+      "ClonedVoiceModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "reference_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Text"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "title": "Size Bytes"
+          },
+          "consent_verified": {
+            "type": "boolean",
+            "title": "Consent Verified",
+            "default": false
+          },
+          "rights_confirmed": {
+            "type": "boolean",
+            "title": "Rights Confirmed",
+            "default": false
+          },
+          "date_created": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Date Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "language",
+          "model",
+          "reference_text",
+          "size_bytes",
+          "date_created"
+        ],
+        "title": "ClonedVoiceModel"
+      },
+      "ConsentPromptModel": {
+        "properties": {
+          "prompt_id": {
+            "type": "string",
+            "title": "Prompt Id",
+            "description": "Send with the recording to POST /v1/voices as consent_prompt_id."
+          },
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text",
+            "description": "The sentence the speaker reads aloud, exactly as written."
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In",
+            "description": "Seconds the prompt_id stays valid."
+          }
+        },
+        "type": "object",
+        "required": [
+          "prompt_id",
+          "language",
+          "text",
+          "expires_in"
+        ],
+        "title": "ConsentPromptModel"
+      },
+      "DayPoint": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "failed_requests": {
+            "type": "integer",
+            "title": "Failed Requests"
+          },
+          "characters": {
+            "type": "number",
+            "title": "Characters"
+          },
+          "audio_seconds": {
+            "type": "number",
+            "title": "Audio Seconds"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "requests",
+          "failed_requests",
+          "characters",
+          "audio_seconds",
+          "cost"
+        ],
+        "title": "DayPoint"
+      },
+      "DocumentTextModel": {
+        "properties": {
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "characters": {
+            "type": "integer",
+            "title": "Characters"
+          },
+          "words": {
+            "type": "integer",
+            "title": "Words"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "url",
+              "pdf",
+              "docx",
+              "text"
+            ],
+            "title": "Source"
+          },
+          "pages": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pages"
+          },
+          "truncated": {
+            "type": "boolean",
+            "title": "Truncated",
+            "default": false
+          },
+          "warning": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warning"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "characters",
+          "words",
+          "source"
+        ],
+        "title": "DocumentTextModel"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "KeyRow": {
+        "properties": {
+          "key_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "key_prefix": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Key Prefix"
+          },
+          "kind": {
+            "type": "string",
+            "title": "Kind"
+          },
+          "is_active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Active"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "failed_requests": {
+            "type": "integer",
+            "title": "Failed Requests"
+          },
+          "characters": {
+            "type": "number",
+            "title": "Characters"
+          },
+          "audio_seconds": {
+            "type": "number",
+            "title": "Audio Seconds"
+          },
+          "voices": {
+            "type": "number",
+            "title": "Voices"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          },
+          "last_request_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Request At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "key_id",
+          "name",
+          "key_prefix",
+          "kind",
+          "is_active",
+          "requests",
+          "failed_requests",
+          "characters",
+          "audio_seconds",
+          "voices",
+          "cost",
+          "last_request_at"
+        ],
+        "title": "KeyRow",
+        "description": "Usage by API key. `key_id` is None for calls made from the dashboard\n(playground) and for keys that have since been deleted."
+      },
+      "LanguageModel": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "services": {
+            "items": {
+              "$ref": "#/components/schemas/Service"
+            },
+            "type": "array",
+            "title": "Services"
+          },
+          "tts_models": {
+            "items": {
+              "$ref": "#/components/schemas/TTSModel"
+            },
+            "type": "array",
+            "title": "Tts Models"
+          },
+          "default_tts_model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TTSModel"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "default_voice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Voice Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "name",
+          "services",
+          "tts_models",
+          "default_tts_model",
+          "default_voice_id"
+        ],
+        "title": "LanguageModel"
+      },
+      "LanguageModelRow": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "language_name": {
+            "type": "string",
+            "title": "Language Name"
+          },
+          "product": {
+            "type": "string",
+            "title": "Product"
+          },
+          "service": {
+            "type": "string",
+            "title": "Service"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          },
+          "requests": {
+            "type": "integer",
+            "title": "Requests"
+          },
+          "units": {
+            "type": "number",
+            "title": "Units"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit"
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "language_name",
+          "product",
+          "service",
+          "model",
+          "requests",
+          "units",
+          "unit",
+          "cost"
+        ],
+        "title": "LanguageModelRow",
+        "description": "Which model served which language, for which service."
+      },
+      "Service": {
+        "type": "string",
+        "enum": [
+          "tts",
+          "tts_clone",
+          "asr",
+          "translation"
+        ],
+        "title": "Service"
+      },
+      "SpeechRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 5000,
+            "minLength": 1,
+            "title": "Text",
+            "description": "Text to speak. Normalised per language before synthesis (currency, numbers, units, times)."
+          },
+          "language": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 2,
+            "title": "Language",
+            "description": "Language code (e.g. `yo`, `ha`, `ig`, `pcm`, `en`, `sw`) or name. See GET /v1/languages.",
+            "examples": [
+              "yo"
+            ]
+          },
+          "voice_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Voice Id",
+            "description": "A built-in voice id or name (see GET /v1/voices?language=xx, for example `tola`, `aderonke`, `maryam`) or the id of one of your cloned voices. Omit for the language's default voice.",
+            "examples": [
+              "tola"
+            ]
+          },
+          "model": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TTSModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Pin a TTS engine. Default: `storm-v1` for Nigerian languages, `storm-v3` otherwise. Cloned voices use the engine they were created with."
+          },
+          "fast": {
+            "type": "boolean",
+            "title": "Fast",
+            "description": "Skip the engine's quality-retry loop for lower latency.",
+            "default": false
+          },
+          "normalize": {
+            "type": "boolean",
+            "title": "Normalize",
+            "description": "Apply Plotweaver text normalisation before synthesis.",
+            "default": true
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "quality",
+                  "speed"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode",
+            "description": "`quality`: built-in voices on storm-v1. `speed`: the same built-in voice on storm-gust, for the lowest latency (first audio in about 0.1 s when streaming), with a little less expression. Default: `quality` for POST /v1/speech, `speed` for POST /v1/speech/stream (unless `model` is pinned). Nigerian languages only; cloned voices always run on storm-gust."
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "language"
+        ],
+        "title": "SpeechRequest"
+      },
+      "TTSModel": {
+        "type": "string",
+        "enum": [
+          "storm-v1",
+          "storm-gust",
+          "storm-v3",
+          "storm-ensemble",
+          "storm-v2"
+        ],
+        "title": "TTSModel",
+        "description": "Public names for the three TTS engines. Developers may pin one."
+      },
+      "Totals": {
+        "properties": {
+          "requests": {
+            "type": "integer",
+            "title": "Requests",
+            "default": 0
+          },
+          "successful_requests": {
+            "type": "integer",
+            "title": "Successful Requests",
+            "default": 0
+          },
+          "failed_requests": {
+            "type": "integer",
+            "title": "Failed Requests",
+            "default": 0
+          },
+          "units": {
+            "$ref": "#/components/schemas/UnitTotals",
+            "default": {
+              "characters": 0.0,
+              "audio_seconds": 0.0,
+              "voices": 0.0
+            }
+          },
+          "cost": {
+            "type": "number",
+            "title": "Cost",
+            "default": 0.0
+          },
+          "active_languages": {
+            "type": "integer",
+            "title": "Active Languages",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "Totals"
+      },
+      "TranscriptionModel": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "language": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Language"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          },
+          "audio_duration_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Audio Duration S"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "storm-asr-2.0"
+          },
+          "segments": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TranscriptionSegment"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Segments",
+            "description": "With timestamps=segment: the transcript in timed pieces, cut at pauses."
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "text"
+        ],
+        "title": "TranscriptionModel"
+      },
+      "TranscriptionSegment": {
+        "properties": {
+          "start": {
+            "type": "number",
+            "title": "Start",
+            "description": "Seconds from the start of the audio."
+          },
+          "end": {
+            "type": "number",
+            "title": "End"
+          },
+          "text": {
+            "type": "string",
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "text"
+        ],
+        "title": "TranscriptionSegment"
+      },
+      "TranslationModel": {
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "title": "Request Id"
+          },
+          "source_language": {
+            "type": "string",
+            "title": "Source Language"
+          },
+          "target_language": {
+            "type": "string",
+            "title": "Target Language"
+          },
+          "translated_text": {
+            "type": "string",
+            "title": "Translated Text"
+          },
+          "pivoted": {
+            "type": "boolean",
+            "title": "Pivoted",
+            "default": false
+          },
+          "pivot_intermediate_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pivot Intermediate Text"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model",
+            "default": "storm-mt"
+          }
+        },
+        "type": "object",
+        "required": [
+          "request_id",
+          "source_language",
+          "target_language",
+          "translated_text"
+        ],
+        "title": "TranslationModel"
+      },
+      "TranslationRequest": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Text"
+          },
+          "source_language": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 2,
+            "title": "Source Language",
+            "description": "Language code (e.g. `yo`, `ha`, `ig`, `pcm`, `en`, `sw`) or name. See GET /v1/languages.",
+            "examples": [
+              "yo"
+            ]
+          },
+          "target_language": {
+            "type": "string",
+            "maxLength": 32,
+            "minLength": 2,
+            "title": "Target Language",
+            "description": "Language code (e.g. `yo`, `ha`, `ig`, `pcm`, `en`, `sw`) or name. See GET /v1/languages.",
+            "examples": [
+              "yo"
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "text",
+          "source_language",
+          "target_language"
+        ],
+        "title": "TranslationRequest"
+      },
+      "UnitTotals": {
+        "properties": {
+          "characters": {
+            "type": "number",
+            "title": "Characters",
+            "default": 0
+          },
+          "audio_seconds": {
+            "type": "number",
+            "title": "Audio Seconds",
+            "default": 0
+          },
+          "voices": {
+            "type": "number",
+            "title": "Voices",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "title": "UnitTotals"
+      },
+      "UpdateVoiceData": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 1
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 500
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "title": "UpdateVoiceData"
+      },
+      "UsageSummary": {
+        "properties": {
+          "currency": {
+            "type": "string",
+            "title": "Currency",
+            "default": "USD"
+          },
+          "start": {
+            "type": "string",
+            "format": "date",
+            "title": "Start"
+          },
+          "end": {
+            "type": "string",
+            "format": "date",
+            "title": "End"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/Totals"
+          },
+          "by_product": {
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            },
+            "type": "array",
+            "title": "By Product"
+          },
+          "by_service": {
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            },
+            "type": "array",
+            "title": "By Service"
+          },
+          "by_model": {
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            },
+            "type": "array",
+            "title": "By Model"
+          },
+          "by_language": {
+            "items": {
+              "$ref": "#/components/schemas/Bucket"
+            },
+            "type": "array",
+            "title": "By Language"
+          },
+          "language_models": {
+            "items": {
+              "$ref": "#/components/schemas/LanguageModelRow"
+            },
+            "type": "array",
+            "title": "Language Models"
+          },
+          "by_day": {
+            "items": {
+              "$ref": "#/components/schemas/DayPoint"
+            },
+            "type": "array",
+            "title": "By Day"
+          },
+          "by_client": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ClientRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Client"
+          },
+          "by_key": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/KeyRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "By Key"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start",
+          "end",
+          "totals",
+          "by_product",
+          "by_service",
+          "by_model",
+          "by_language",
+          "language_models",
+          "by_day"
+        ],
+        "title": "UsageSummary"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VoiceAudioModel": {
+        "properties": {
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "expires_in": {
+            "type": "integer",
+            "title": "Expires In"
+          }
+        },
+        "type": "object",
+        "required": [
+          "url",
+          "expires_in"
+        ],
+        "title": "VoiceAudioModel"
+      },
+      "VoiceModel": {
+        "properties": {
+          "voice_id": {
+            "type": "string",
+            "title": "Voice Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "type": {
+            "type": "string",
+            "title": "Type"
+          },
+          "model": {
+            "$ref": "#/components/schemas/TTSModel"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
+          },
+          "native_languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Native Languages",
+            "default": []
+          },
+          "languages": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Languages"
+          },
+          "is_native": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Native"
+          },
+          "cross_lingual": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cross Lingual"
+          },
+          "recommended": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recommended"
+          },
+          "sample_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Url"
+          },
+          "sample_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sample Version"
+          },
+          "samples": {
+            "items": {
+              "$ref": "#/components/schemas/VoiceSample"
+            },
+            "type": "array",
+            "title": "Samples",
+            "default": []
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "consent_verified": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Consent Verified"
+          },
+          "date_created": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date Created"
+          }
+        },
+        "type": "object",
+        "required": [
+          "voice_id",
+          "name",
+          "type",
+          "model",
+          "languages"
+        ],
+        "title": "VoiceModel"
+      },
+      "VoiceSample": {
+        "properties": {
+          "language": {
+            "type": "string",
+            "title": "Language"
+          },
+          "url": {
+            "type": "string",
+            "title": "Url"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "type": "object",
+        "required": [
+          "language",
+          "url"
+        ],
+        "title": "VoiceSample"
+      }
+    }
+  }
+}

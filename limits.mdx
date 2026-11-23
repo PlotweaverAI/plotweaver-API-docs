@@ -1,0 +1,78 @@
+---
+title: "Limits"
+description: "Request limits, sizes, concurrency and what to do when you reach them."
+---
+
+## Requests per minute
+
+The request limit counts every call to speech, transcription and translation across all of your keys.
+
+| Plan | Requests per minute |
+|---|---|
+| Pay as you go | 60 |
+| Starter | 300 |
+| Growth | 1,000 |
+| Business | 2,000 |
+| Enterprise | 3,000 or more |
+
+Over the limit, calls return `429` with `detail.code: "rate_limit_exceeded"` and a `Retry-After` header.
+
+## Sizes
+
+| Endpoint | Limit |
+|---|---|
+| `POST /v1/speech`, `POST /v1/speech/stream` | 5,000 characters after normalisation |
+| `POST /v1/translations` | 2,000 characters |
+| `POST /v1/transcriptions` | 25 MB per file; timed transcripts up to 2 hours of audio |
+| `POST /v1/voices` | Clip up to 10 MB; the first 10 seconds of speech are used |
+| `POST /v1/documents/text` | 15 MB per file; text up to 100,000 characters |
+| Real-time transcription | 30 minutes of audio per connection |
+
+## Running at the same time
+
+| What | At once, per account |
+|---|---|
+| Speech with built-in voices (streamed or not) | 12 |
+| Speech with cloned voices | 8 |
+| Real-time transcription connections | 8 |
+
+When STORM v1.5 is full, built-in voices overflow to STORM Gust with the same voice (`X-Overflow: true`) instead of waiting. When a service is truly at capacity, you get `429` with `Retry-After` at once, never a long silent queue.
+
+## Monthly allowances
+
+Some accounts have a monthly allowance per product. A request that would pass it is refused with `429` and a body that says exactly where you stand:
+
+```json
+{
+  "detail": {
+    "code": "usage_limit_reached",
+    "product": "tts",
+    "unit": "characters",
+    "limit": 500000,
+    "used": 499650,
+    "requested": 900,
+    "resets_at": "2026-12-01T00:00:00+00:00"
+  }
+}
+```
+
+## Retrying well
+
+```python
+import time
+import requests
+
+
+def call_with_retry(send, attempts: int = 4):
+    for attempt in range(attempts):
+        r = send()
+        if r.status_code not in (429, 502, 503):
+            return r
+        wait = float(r.headers.get("Retry-After", 2 ** attempt))
+        time.sleep(wait)
+    return r
+```
+
+Retry `429`, `502` and `503`. Never retry `400`, `401`, `402`, `403` or `422` unchanged: the answer will not change.
+
+Need higher limits for a launch or a campaign? Write to [info@plotweaver.app](mailto:info@plotweaver.app) before the day.

@@ -1,0 +1,46 @@
+---
+title: "Billing"
+description: "One pool of minutes for every service, and how each request is counted."
+---
+
+PlotWeaver plans are a pool of **minutes** shared by every service, in the dashboard and through the API and MCP alike. Current plans and prices are on the [pricing page](https://plotweaver.app/pricing).
+
+## How a request is counted
+
+| Service | Counted as | Weight |
+|---|---|---|
+| Text to speech, streaming or not | Minutes of audio produced | 1x |
+| Speech in a cloned voice | Minutes of audio produced | 1x |
+| Speech to text, file or real time | Minutes of audio sent | 1x |
+| Translation | Each 1,000 characters of source text is one minute | 1.5x |
+| Documents (`POST /v1/documents/text`) | Free | |
+| Creating a cloned voice | A one-time fee per voice | |
+
+Each request is measured to the second and rounded up to the next second.
+
+## Plans
+
+Choose a plan in the dashboard under **Billing**. Paid plans include a monthly pool of minutes, with extra minutes charged at the plan's rate; Pay as you go is prepaid. Payment is by card through Stripe, and receipts are under **Billing > Manage billing**.
+
+- **Upgrades** take effect immediately, prorated.
+- **Downgrades and cancellation** take effect at the end of the billing month.
+- **Large months never arrive as one surprise:** when unbilled usage passes a threshold mid-month, it is charged straight away and taken off the month-end bill.
+
+## When a payment fails
+
+The API keeps working for **7 days** while the card is retried. After that, calls are refused with `402` and `detail.code: "payment_overdue"` until the invoice is paid. With no active plan and no credit left, calls get `402` with `billing_setup_required`.
+
+## Seeing your usage
+
+The dashboard shows usage by service, language, model, day and API key. The same data is available to your code:
+
+```bash
+curl "https://api.plotweaver.app/v1/usage/summary?start=2026-11-01&end=2026-11-30" \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY"
+```
+
+It returns totals (requests, failed requests, characters, audio seconds, voices cloned, cost, languages used) and breakdowns `by_product`, `by_service`, `by_model`, `by_language`, `by_day` and `by_key`. `GET /v1/usage/report.pdf` with the same query downloads it as a PDF.
+
+## Enterprise
+
+Committed volume, dedicated capacity, custom voices and invoicing on terms: write to [info@plotweaver.app](mailto:info@plotweaver.app).

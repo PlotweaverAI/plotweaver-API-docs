@@ -1,0 +1,56 @@
+---
+title: "Authentication"
+description: "API keys, where to keep them, and what each refusal means."
+---
+
+Every request to the developer API carries an API key in the `X-API-Key` header.
+
+```bash
+curl https://api.plotweaver.app/v1/voices?language=yo \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY"
+```
+
+| | |
+|---|---|
+| **Base URL** | `https://api.plotweaver.app/v1` |
+| **Header** | `X-API-Key: pw_prod_...` |
+| **Interactive reference** | [API reference](/api-reference/introduction) |
+| **Plain-text guide for LLMs** | `https://api.plotweaver.app/v1/docs.md` |
+
+`GET /v1/languages` is the only endpoint that works without a key.
+
+## Creating and managing keys
+
+Create keys in the [dashboard](https://app.plotweaver.app) under **API Keys**. Each key has a name, so you can tell your services apart, and the dashboard shows each key's requests, usage and cost.
+
+- **Rotate** a key to give it a new secret while keeping its name and history. You can keep the old secret working for a grace period, so your services roll over without downtime.
+- **Delete** a key to revoke it. Anything still using it gets `401`.
+- Usage and billing are per account: every key draws on the same plan and allowance.
+
+<Warning>
+Keep keys on your server. Never ship a key inside a mobile app, a browser bundle or a public repository: anyone who has it can spend your credit. Call PlotWeaver from your backend, and let your apps talk to your backend.
+</Warning>
+
+### Using a key from a browser or phone
+
+Your frontend should never hold the key. The pattern that works:
+
+1. Your app sends the text (or audio) to your own backend.
+2. Your backend calls PlotWeaver with the key.
+3. Your backend returns the audio or transcript to the app.
+
+The one exception is [real-time transcription](/realtime-transcription), which accepts the key as an `api_key=` query parameter for WebSocket clients that cannot set headers. Even there, open the socket from your server whenever you can.
+
+## When a key is refused
+
+| Status | `detail.code` | Meaning | What to do |
+|---|---|---|---|
+| `401` | | The key is missing, wrong, revoked or expired | Check the header name and the key |
+| `403` | `service_not_enabled` | This product is not enabled for your account | Contact us to enable it |
+| `403` | `access_expired` | Your access period has ended | Contact us |
+| `403` | `account_suspended` | The account is suspended | Contact us |
+| `403` | `password_change_required` | You must set a new password first | Sign in to the dashboard once |
+| `402` | `billing_setup_required` | No active plan or credit | Choose a plan under **Billing** |
+| `402` | `payment_overdue` | A payment failed and the grace period ended | Update your card under **Billing** |
+
+See [Errors](/errors) for the full list.

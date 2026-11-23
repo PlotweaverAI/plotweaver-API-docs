@@ -1,0 +1,124 @@
+---
+title: "Voice cloning"
+description: "Create a reusable voice from 5 to 10 seconds of one person speaking, with consent built in."
+---
+
+A cloned voice is a `voice_id` you can use anywhere a built-in voice works: `POST /v1/speech`, `POST /v1/speech/stream` and the MCP tools.
+
+| Clip language | Engine | What the voice can speak |
+|---|---|---|
+| `yo`, `ha`, `ig`, `pcm`, `en` | STORM Gust 1.0 | All five Nigerian languages, and it streams |
+| Any of the other 65 cloning languages | STORM v3 | Its own language |
+
+<Warning>
+Only clone a voice with the speaker's permission. PlotWeaver gives you a way to record that permission in the clip itself; see [Recording consent](#recording-consent).
+</Warning>
+
+## Record a good clip
+
+The clip decides how the voice sounds. Five minutes spent on it is worth it.
+
+- **5 to 10 seconds** of one person speaking. The first 10 seconds of speech are used; silence at the start and end is ignored.
+- **A quiet room**, close to the microphone, with no music, TV or other voices.
+- **Natural delivery** in the tone you want the voice to have: warm for customer service, energetic for ads.
+- wav, mp3, flac, ogg or m4a, up to 10 MB.
+
+## Create the voice
+
+`POST /v1/voices` with `multipart/form-data`:
+
+```bash
+curl -X POST https://api.plotweaver.app/v1/voices \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -F name="Narrator" \
+  -F language=yo \
+  -F file=@narrator.wav
+```
+
+<ParamField body="name" type="string" required>
+  Your label for the voice.
+</ParamField>
+
+<ParamField body="language" type="string" required>
+  The language spoken in the clip.
+</ParamField>
+
+<ParamField body="file" type="file" required>
+  The clip, as described above.
+</ParamField>
+
+<ParamField body="reference_text" type="string">
+  The exact words spoken in the clip. **Required for languages outside Nigeria.** For the Nigerian languages it is optional: STORM ASR 2.0 transcribes the clip for you, and code-mixed speech is fine.
+</ParamField>
+
+<ParamField body="description" type="string">
+  A note for yourself.
+</ParamField>
+
+<ParamField body="consent_prompt_id" type="string">
+  From `GET /v1/voices/consent`. See below.
+</ParamField>
+
+The answer is `201` with the voice's `id`. Use it as `voice_id`:
+
+```bash
+curl -X POST https://api.plotweaver.app/v1/speech \
+  -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Welcome back to the show.", "language": "en", "voice_id": "VOICE_ID"}' \
+  --output intro.wav
+```
+
+### Quality checks
+
+Every clip for a Nigerian-language voice is checked before the voice is created. It is refused with `400` when it holds less than 3 seconds of speech, or when STORM ASR 2.0 cannot hear clear words in it (noise, music or silence). Record again in a quiet room and retry.
+
+## Recording consent
+
+For the Nigerian languages you can capture the speaker's permission in the clip itself.
+
+<Steps>
+  <Step title="Get a consent sentence">
+    ```bash
+    curl "https://api.plotweaver.app/v1/voices/consent?language=yo" \
+      -H "X-API-Key: $PLOTWEAVER_API_KEY"
+    ```
+
+    ```json
+    {
+      "prompt_id": "eyJsIjoieW8i...",
+      "language": "yo",
+      "text": "Mo gbà kí PlotWeaver ṣe àdàkọ ohùn mi. ...",
+      "expires_in": 1800
+    }
+    ```
+  </Step>
+  <Step title="The speaker reads it aloud">
+    Record them reading `text`. That recording is the voice clip.
+  </Step>
+  <Step title="Create the voice with the prompt id">
+    Send the recording to `POST /v1/voices` with `consent_prompt_id`. STORM ASR 2.0 checks that the recording says the sentence, and the voice is created with `consent_verified: true`.
+  </Step>
+</Steps>
+
+Reading the sentence is optional. Any other clip (the speaker said something else, the prompt expired after 30 minutes, or no prompt was sent) is still cloned, with `consent_verified: false`.
+
+## Manage your voices
+
+| Request | What it does |
+|---|---|
+| `GET /v1/voices?type=cloned` | Your cloned voices |
+| `GET /v1/voices/{voice_id}` | One voice |
+| `PATCH /v1/voices/{voice_id}` | Change `name` or `description` |
+| `DELETE /v1/voices/{voice_id}` | Delete the voice and its stored clip |
+| `GET /v1/voices/{voice_id}/audio` | A one-hour link to the clip you uploaded |
+
+## One-off cloning
+
+`POST /v1/speech/clone` speaks text in the voice of a clip for one request, without saving a voice. Send `multipart/form-data` with `text`, `language`, `reference_audio` (the clip), `reference_text` (required outside Nigeria) and optionally `model`, `fast` and `normalize`. The answer is `audio/wav`.
+
+Save a voice with `POST /v1/voices` instead whenever you will use it more than once: it is faster and every result sounds the same.
+
+## Pricing
+
+Creating a voice has a one-time fee per voice, and speech in a cloned voice is billed like any other speech. See [Billing](/billing).

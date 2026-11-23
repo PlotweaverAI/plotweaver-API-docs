@@ -1,0 +1,33 @@
+---
+title: "Errors"
+description: "Every status code the API returns, what it means and what to do."
+---
+
+Errors are JSON, with a `detail` that is either a plain sentence or an object with a `code`:
+
+```json
+{ "detail": "Voice 'tola2' not found", "path": "/v1/speech", "timestamp": "2026-11-23T10:15:02Z" }
+```
+
+```json
+{ "detail": { "code": "rate_limit_exceeded" } }
+```
+
+Branch on `detail.code` when it is present; show `detail` to a person when it is a sentence.
+
+| Status | Meaning | What to do |
+|---|---|---|
+| `400` | Invalid input: an unsupported language, a voice that cannot speak the language, text that is too long, or a voice clip with too little clear speech | Fix the request |
+| `401` | Missing, wrong, revoked or expired API key | Check the `X-API-Key` header |
+| `402` | `billing_setup_required` or `payment_overdue` | Choose a plan or update your card under **Billing** |
+| `403` | `service_not_enabled`, `access_expired`, `account_suspended` or `password_change_required` | See [Authentication](/authentication#when-a-key-is-refused) |
+| `404` | Voice (or another resource) not found | Check the id |
+| `413` | Upload too large | Send a smaller file, or only the audio track |
+| `422` | The body failed validation, or a document could not be read | Read `detail` |
+| `429` | `rate_limit_exceeded`, `usage_limit_reached`, or a plain `429` with `Retry-After` when an engine is at capacity | Wait for `Retry-After`; see [Limits](/limits) |
+| `502` | The model engine failed | Retry once |
+| `503` | Engine busy or unreachable | Retry with backoff |
+
+## Getting help with a failed request
+
+Every response, error or not, has an `X-Request-ID` header. Send it to [info@plotweaver.app](mailto:info@plotweaver.app) with the time of the request, and we can see exactly what happened. The dashboard's request log shows every call with its status and timing.

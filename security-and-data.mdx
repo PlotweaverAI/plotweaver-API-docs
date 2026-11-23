@@ -1,0 +1,38 @@
+---
+title: "Security and data"
+description: "How keys, files and the content of your requests are handled."
+---
+
+## Keys
+
+- Keys are sent in a header over HTTPS only, and the dashboard shows only a short prefix of each key in logs and request lists.
+- Rotate or delete a key at any time under **API Keys**. Deletion takes effect at once.
+- Each key's usage is visible separately, so an unexpected spike points straight at the service using it.
+
+## Files you upload
+
+Every uploaded file (audio, video, voice clips and documents) is checked before it is processed: the file must be what it says it is, and malformed or disguised files are refused. Links you give us are fetched only from public addresses; links to private or internal networks are refused.
+
+## What we keep
+
+| What | How long |
+|---|---|
+| The content of requests and responses in the request log (text you sent, transcripts) | Cleared after 30 days |
+| The technical record of each request (time, endpoint, status, timing, key prefix) | 365 days |
+| Billing and usage records | As long as tax law requires |
+| Cloned voices and their clips | Until you delete the voice |
+
+Sample links, cloned-voice clip links and other audio links are signed and expire, typically after an hour.
+
+## Voice cloning and consent
+
+Cloning a voice requires the speaker's permission. For the Nigerian languages the speaker can read a consent sentence that STORM ASR 2.0 verifies, and the voice records whether consent was verified. See [Voice cloning](/voice-cloning#recording-consent).
+
+## Policies
+
+- [Privacy policy](https://app.plotweaver.app/privacy)
+- [Terms of service](https://app.plotweaver.app/terms)
+
+PlotWeaver Limited, Company No. 16189457, London, United Kingdom.
+
+To report a security issue, write to [info@plotweaver.app](mailto:info@plotweaver.app) with "Security" in the subject.

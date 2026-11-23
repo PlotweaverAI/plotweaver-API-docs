@@ -1,0 +1,103 @@
+---
+title: "Quickstart"
+description: "Get a key and turn text into Yoruba speech in under two minutes."
+---
+
+<Steps>
+  <Step title="Get an API key">
+    Sign in to the [PlotWeaver dashboard](https://app.plotweaver.app), open **API Keys** and select **Create key**.
+
+    Keep it in an environment variable rather than in your code:
+
+    ```bash
+    export PLOTWEAVER_API_KEY="pw_prod_..."
+    ```
+  </Step>
+
+  <Step title="Make your first audio">
+    <CodeGroup>
+
+    ```bash curl
+    curl -X POST https://api.plotweaver.app/v1/speech \
+      -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"text": "Ẹ kú àárọ̀, ẹ káàbọ̀ sí PlotWeaver.", "language": "yo"}' \
+      --output welcome.wav
+    ```
+
+    ```python Python
+    import os
+    import requests
+
+    r = requests.post(
+        "https://api.plotweaver.app/v1/speech",
+        headers={"X-API-Key": os.environ["PLOTWEAVER_API_KEY"]},
+        json={"text": "Ẹ kú àárọ̀, ẹ káàbọ̀ sí PlotWeaver.", "language": "yo"},
+        timeout=120,
+    )
+    r.raise_for_status()
+    with open("welcome.wav", "wb") as f:
+        f.write(r.content)
+    print("Voice:", r.headers["X-Voice"], "Model:", r.headers["X-Model"])
+    ```
+
+    ```javascript Node.js
+    import { writeFile } from "node:fs/promises";
+
+    const res = await fetch("https://api.plotweaver.app/v1/speech", {
+      method: "POST",
+      headers: {
+        "X-API-Key": process.env.PLOTWEAVER_API_KEY,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ text: "Ẹ kú àárọ̀, ẹ káàbọ̀ sí PlotWeaver.", language: "yo" }),
+    });
+    if (!res.ok) throw new Error(`${res.status}: ${await res.text()}`);
+    await writeFile("welcome.wav", Buffer.from(await res.arrayBuffer()));
+    ```
+
+    </CodeGroup>
+
+    Play `welcome.wav`. You just heard Adérónkẹ́, the default Yoruba voice on STORM v1.5.
+  </Step>
+
+  <Step title="Pick a voice">
+    List every voice that can speak a language, each with a sample you can play first:
+
+    ```bash
+    curl "https://api.plotweaver.app/v1/voices?language=pcm" \
+      -H "X-API-Key: $PLOTWEAVER_API_KEY"
+    ```
+
+    Then pass its id as `voice_id`:
+
+    ```bash
+    curl -X POST https://api.plotweaver.app/v1/speech \
+      -H "X-API-Key: $PLOTWEAVER_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{"text": "How far? Your order don land, e go reach you by two o clock.", "language": "pcm", "voice_id": "ovie"}' \
+      --output order.wav
+    ```
+  </Step>
+
+  <Step title="Go further">
+    <CardGroup cols={2}>
+      <Card title="Stream speech" icon="bolt" href="/streaming-speech">
+        Start playing in about 0.1 seconds.
+      </Card>
+      <Card title="Transcribe audio" icon="closed-captioning" href="/speech-to-text">
+        Turn Nigerian speech into text and subtitles.
+      </Card>
+      <Card title="Clone a voice" icon="user" href="/voice-cloning">
+        Your own voice, in all five Nigerian languages.
+      </Card>
+      <Card title="Use it from your AI assistant" icon="sparkles" href="/mcp/overview">
+        No code: just ask.
+      </Card>
+    </CardGroup>
+  </Step>
+</Steps>
+
+<Tip>
+Every response carries an `X-Request-ID` header. Log it: it is the fastest way for our team to find a request if you ever need help.
+</Tip>

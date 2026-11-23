@@ -1,0 +1,68 @@
+---
+title: "Files and audio"
+description: "How audio, video and documents move between your assistant and PlotWeaver."
+---
+
+## Results
+
+Every audio result comes back with three things:
+
+| | |
+|---|---|
+| `audio_id` | `aud_...`, a handle to pass to any other tool |
+| Download link | Works for 24 hours, in a browser, `curl`, `ffmpeg` or any editor |
+| Duration | Exact, in seconds, for placing clips on a timeline |
+
+Audio is kept for **7 days**. When a link has expired, `get_audio` gives a fresh one.
+
+## Giving PlotWeaver audio, video or documents
+
+Any tool that takes audio accepts any of these:
+
+| You have | Pass |
+|---|---|
+| Audio PlotWeaver made earlier | Its `audio_id` (`aud_...`) |
+| A file in the assistant's workspace or your project | An `upload_id` (`upl_...`) from `upload_file` |
+| Something you will record now | A `recording_id` (`rec_...`) from `record_voice` |
+| A file online | An `https://` link. Google Drive and Dropbox share links work |
+
+Video works everywhere audio does: the sound track is taken out automatically.
+
+### Files the assistant already has
+
+Claude (with file creation on), Claude Code, Cursor and other agents with a shell send files straight from their own workspace:
+
+<Steps>
+  <Step title="The assistant asks for an upload link">
+    It calls `upload_file` and gets back a one-time link and a ready command.
+  </Step>
+  <Step title="It sends the file">
+    It runs the command in its own shell:
+
+    ```bash
+    curl -sS -T interview.mp4 "https://mcp.plotweaver.app/upload/..."
+    ```
+
+    The answer confirms the size and, for media, the duration.
+  </Step>
+  <Step title="It uses the upload">
+    It passes the `upl_...` id to `transcribe_audio`, `clone_voice` or `read_document`. The upload can be reused for 24 hours.
+  </Step>
+</Steps>
+
+You never upload the same file twice. If an assistant's network blocks the upload, it falls back to `record_voice`, where you can upload the file from your own device.
+
+### Something only you have
+
+Chat apps turn what you say into text, so they cannot pass your voice along. `record_voice` gives you a one-time page (it lasts one hour) where you record from your phone or computer, or upload a file. For cloning, the page also asks you to confirm that the speaker agreed to have their voice cloned.
+
+## Sizes
+
+| | |
+|---|---|
+| Largest file fetched from a link | 500 MB |
+| Documents | Text up to 100,000 characters |
+| Uploads and recordings | Kept 24 hours |
+| Generated audio | Kept 7 days |
+
+For long videos, the assistant can send only the audio track (`ffmpeg -vn`), which is much faster.

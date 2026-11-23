@@ -1,0 +1,48 @@
+---
+title: "Sign-in and security"
+description: "What happens when you connect an app, and how your account stays protected."
+---
+
+## Sign in with PlotWeaver
+
+When you add PlotWeaver to Claude, ChatGPT or another app that supports MCP sign-in:
+
+1. The app sends you to a PlotWeaver page at `mcp.plotweaver.app`.
+2. You sign in with your PlotWeaver account. The page shows which app is asking.
+3. You press **Approve**.
+4. PlotWeaver creates an API key on your account named after the app, for example "Claude connector", and the app receives its own access token.
+
+The key itself never leaves PlotWeaver's server. The app only holds a short-lived token that works with the PlotWeaver MCP and nothing else.
+
+### Which app is asking
+
+The page names Claude and ChatGPT only when the request really comes from claude.ai, claude.com, chatgpt.com or openai.com. Any other app is shown as an **unverified app** together with its web address. Desktop tools such as Claude Code, Cursor and VS Code sign in through a page on your own computer, so they appear as an unverified app at `localhost`.
+
+Approve an unverified app only when you started the sign-in yourself, just now, from that app.
+
+### Disconnecting
+
+Delete the app's key (for example "ChatGPT connector") in the [dashboard](https://app.plotweaver.app) under **API Keys**. The app loses access at once, on every device. Removing the connector inside the app works too.
+
+## How it is built
+
+| | |
+|---|---|
+| Standard | OAuth 2.1 with PKCE (S256), as the MCP specification requires |
+| App registration | Client ID Metadata Documents and Dynamic Client Registration, so no client ID or secret is ever typed in |
+| Access tokens | Last one hour |
+| Refresh tokens | Rotate on every use and expire after 30 days unused |
+| Storage | Tokens are stored as hashes; the API key behind each connection is encrypted at rest |
+| Discovery | Protected resource metadata (RFC 9728) on every `401` |
+
+## Safety labels on every tool
+
+Each tool tells your assistant whether it only reads, spends credit, changes data or deletes. `delete_voice` is labelled destructive, and assistants confirm with you before calling it. Cloning a voice requires the speaker's confirmed permission. See the [tools reference](/mcp/tools).
+
+## Content from documents and transcripts
+
+Text from web pages, documents and transcripts is returned to the assistant as content, never as instructions. A web page cannot tell your assistant what to do through PlotWeaver.
+
+## Billing
+
+Every request runs on your own PlotWeaver account at your normal rates, exactly like an API call, and appears in your dashboard under the connector's key. Ask your assistant to "estimate the cost first" before a large job.

@@ -1,0 +1,192 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "almond",
+  "name": "PlotWeaver Docs",
+  "description": "Build with PlotWeaver: text to speech, speech to text, translation and voice cloning for Nigerian and African languages, through the developer API or the PlotWeaver MCP for AI agents.",
+  "colors": {
+    "primary": "#4A6600",
+    "light": "#C5FF00",
+    "dark": "#4A6600"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg",
+    "href": "https://plotweaver.app"
+  },
+  "favicon": "/favicon.svg",
+  "fonts": {
+    "heading": {
+      "family": "Bricolage Grotesque",
+      "weight": 600
+    },
+    "body": {
+      "family": "Outfit",
+      "weight": 400
+    }
+  },
+  "background": {
+    "color": {
+      "light": "#FFFFFF",
+      "dark": "#061113"
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:info@plotweaver.app"
+      },
+      {
+        "label": "Pricing",
+        "href": "https://plotweaver.app/pricing"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://app.plotweaver.app"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "icon": "book-open",
+        "groups": [
+          {
+            "group": "Get started",
+            "pages": [
+              "index",
+              "quickstart",
+              "authentication",
+              "languages",
+              "voices"
+            ]
+          },
+          {
+            "group": "Text to speech",
+            "pages": [
+              "text-to-speech",
+              "streaming-speech",
+              "voice-cloning"
+            ]
+          },
+          {
+            "group": "Speech to text",
+            "pages": [
+              "speech-to-text",
+              "realtime-transcription"
+            ]
+          },
+          {
+            "group": "Translation and documents",
+            "pages": [
+              "translation",
+              "documents"
+            ]
+          },
+          {
+            "group": "Build",
+            "pages": [
+              "build/phone-voice-agent",
+              "build/video-subtitles",
+              "build/multilingual-announcements",
+              "build/voiceover-from-a-document"
+            ]
+          },
+          {
+            "group": "Account",
+            "pages": [
+              "billing",
+              "limits",
+              "errors",
+              "security-and-data",
+              "support"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "AI agents (MCP)",
+        "icon": "sparkles",
+        "groups": [
+          {
+            "group": "PlotWeaver MCP",
+            "pages": [
+              "mcp/overview"
+            ]
+          },
+          {
+            "group": "Connect",
+            "pages": [
+              "mcp/claude",
+              "mcp/chatgpt",
+              "mcp/claude-code",
+              "mcp/cursor",
+              "mcp/vscode",
+              "mcp/other-clients"
+            ]
+          },
+          {
+            "group": "Use it",
+            "pages": [
+              "mcp/prompts",
+              "mcp/tools",
+              "mcp/files-and-audio",
+              "mcp/sign-in-and-security",
+              "mcp/troubleshooting"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API reference",
+        "icon": "code",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api-reference/introduction",
+              "api-reference/realtime-transcription"
+            ]
+          }
+        ],
+        "openapi": "api-reference/openapi.json"
+      }
+    ]
+  },
+  "api": {
+    "playground": {
+      "display": "interactive"
+    },
+    "examples": {
+      "languages": [
+        "curl",
+        "python",
+        "javascript"
+      ]
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "cursor",
+      "vscode"
+    ]
+  },
+  "footer": {
+    "socials": {
+      "x": "https://x.com/plotweaverapp",
+      "linkedin": "https://www.linkedin.com/company/plotweaver",
+      "website": "https://plotweaver.app"
+    }
+  },
+  "seo": {
+    "metatags": {
+      "og:site_name": "PlotWeaver Docs"
+    }
+  }
+}

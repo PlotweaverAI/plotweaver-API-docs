@@ -1,0 +1,100 @@
+---
+title: "Other clients and SDKs"
+description: "Windsurf, any other MCP client, and PlotWeaver as a tool in the Claude and OpenAI APIs."
+---
+
+Any client that supports remote MCP servers over Streamable HTTP can use PlotWeaver. You need two values:
+
+| | |
+|---|---|
+| URL | `https://mcp.plotweaver.app/mcp` |
+| Header | `X-API-Key: pw_prod_...` (or `Authorization: Bearer pw_prod_...`) |
+
+Clients that support MCP OAuth can leave the header out and sign in with PlotWeaver instead.
+
+## Windsurf
+
+In Cascade, choose **Open MCP config file** and add:
+
+```json
+{
+  "mcpServers": {
+    "plotweaver": {
+      "serverUrl": "https://mcp.plotweaver.app/mcp",
+      "headers": { "X-API-Key": "${env:PLOTWEAVER_API_KEY}" }
+    }
+  }
+}
+```
+
+## Clients that only run local servers
+
+For an app that can only start local (stdio) servers, bridge to the remote server with `mcp-remote`:
+
+```json
+{
+  "mcpServers": {
+    "plotweaver": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://mcp.plotweaver.app/mcp", "--header", "X-API-Key:${PLOTWEAVER_API_KEY}"],
+      "env": { "PLOTWEAVER_API_KEY": "pw_prod_..." }
+    }
+  }
+}
+```
+
+## Claude API
+
+Give Claude PlotWeaver's tools in a single API call with the MCP connector:
+
+```python
+import os
+import anthropic
+
+client = anthropic.Anthropic()
+
+response = client.beta.messages.create(
+    model="claude-opus-5-5",
+    max_tokens=2000,
+    messages=[{"role": "user", "content": "Say 'Welcome to our store' in Hausa with Maryam's voice and give me the link."}],
+    mcp_servers=[
+        {
+            "type": "url",
+            "url": "https://mcp.plotweaver.app/mcp",
+            "name": "plotweaver",
+            "authorization_token": os.environ["PLOTWEAVER_API_KEY"],
+        }
+    ],
+    tools=[{"type": "mcp_toolset", "mcp_server_name": "plotweaver"}],
+    betas=["mcp-client-2025-11-20"],
+)
+print(response.content[-1].text)
+```
+
+## OpenAI Responses API
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI()
+
+response = client.responses.create(
+    model="gpt-6.2-astra",
+    tools=[
+        {
+            "type": "mcp",
+            "server_label": "plotweaver",
+            "server_url": "https://mcp.plotweaver.app/mcp",
+            "authorization": os.environ["PLOTWEAVER_API_KEY"],
+            "require_approval": "never",
+        }
+    ],
+    input="Translate 'Your parcel has arrived' into Yoruba and voice it with Adérónkẹ́.",
+)
+print(response.output_text)
+```
+
+<Tip>
+Building a product rather than an agent? The [developer API](/quickstart) gives you the same capabilities with full control and no model in between.
+</Tip>
